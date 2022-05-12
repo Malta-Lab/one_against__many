@@ -9,6 +9,7 @@
 
 ### Download dataset:
 * https://brpucrs-my.sharepoint.com/:u:/g/personal/otavio_parraga_edu_pucrs_br/ETD3f0jARYBHqUlQREqN750BL0BojS2mRg3IHF6KkSycDw?e=LOzaM2
+* To clean Python split: `preprocess.py --mode clean`
 
 ### Baselines:
 * go: StepLR
@@ -22,6 +23,7 @@
 
 ### Dataset:
 * Downloaded from Microsoft [Methods2Test](https://github.com/microsoft/methods2test)
+* To extract files: `preprocess.py --mode extract`
 
 ### Baselines:
 * For CodeT5 and CodeBERT = base with prefix
