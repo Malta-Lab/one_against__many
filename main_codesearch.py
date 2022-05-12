@@ -8,7 +8,7 @@ from utils import set_seed
 from pathlib import Path
 
 if __name__ == '__main__':
-    args = parse_codesearch_args('training')
+    args = parse_codesearch_args('train')
 
     set_seed()
 

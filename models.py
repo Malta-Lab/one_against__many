@@ -136,6 +136,7 @@ class Code2TestModel(pl.LightningModule):
         self.tokenizer = tokenizer
         self.train_size = train_size
         self.epochs = epochs
+        self.scheduler = scheduler
 
     def training_step(self, batch, batch_idx):
         source, target = batch

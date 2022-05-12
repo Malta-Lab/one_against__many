@@ -10,7 +10,7 @@ from models import load_seq2seq_model_and_tokenizer, Code2TestModel
 
 
 if __name__ == '__main__':
-    args = parse_code2test_args()
+    args = parse_code2test_args('train')
     set_seed()
 
     data_dir = Path(args.data_dir)
