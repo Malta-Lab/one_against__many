@@ -1,9 +1,11 @@
+from argparse import ArgumentParser
 from pathlib import Path
-import io
+import os
+import tarfile
 import tokenize
+import io
 import pandas as pd
-from tqdm import tqdm
-
+import tqdm
 
 def remove_comments_and_docstrings(source):
     try:
@@ -17,7 +19,7 @@ def remove_comments_and_docstrings(source):
             token_string = tok[1]
             start_line, start_col = tok[2]
             end_line, end_col = tok[3]
-            ltext = tok[4]
+            _ = tok[4]
             if start_line > last_lineno:
                 last_col = 0
             if start_col > last_col:
@@ -40,15 +42,32 @@ def remove_comments_and_docstrings(source):
         print(source)
         return source
 
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--mode', type=str, choices=['extract', 'clean'], required=True,
+                        help='extract methods2test or or clean python split from CodeSearchNet')
 
-if __name__ == "__main__":
-    tqdm.pandas()
+    args = parser.parse_args()
 
-    datasets = [Path("datasets/CodeSearchNet/python/train.jsonl"),
-                Path("datasets/CodeSearchNet/python/test.jsonl"),
-                Path("datasets/CodeSearchNet/python/valid.jsonl")]
+    if args.mode == 'extract':
+        data_path = Path('methods2test/corpus/raw/fm/')
+        all_files = os.listdir(data_path)
 
-    for dataset in datasets:
-        df = pd.read_json(dataset, lines=True)
-        df["code"] = df["code"].progress_apply(remove_comments_and_docstrings)
-        df.to_json(dataset, orient='records', lines=True)
+        for file in all_files:
+            print(f'Split {file}')
+            file_name = data_path / file
+            my_tar = tarfile.open(file_name, 'r:bz2')
+            my_tar.extractall(data_path)
+            my_tar.close()
+
+    elif args.mode == 'clean':
+        tqdm.pandas()
+
+        datasets = [Path("datasets/CodeSearchNet/python/train.jsonl"),
+                    Path("datasets/CodeSearchNet/python/test.jsonl"),
+                    Path("datasets/CodeSearchNet/python/valid.jsonl")]
+
+        for dataset in datasets:
+            df = pd.read_json(dataset, lines=True)
+            df["code"] = df["code"].progress_apply(remove_comments_and_docstrings)
+            df.to_json(dataset, orient='records', lines=True)
