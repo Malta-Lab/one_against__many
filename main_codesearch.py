@@ -16,7 +16,7 @@ if __name__ == '__main__':
     data_dir = Path(args.data_dir)
     language = args.language
     ptm = args.pretrained_model
-    output_dir = Path(args.output_dir) / language / ptm.replace('/', '-')
+    output_dir = Path(args.output_dir) / 'codesearch' / language / ptm.replace('/', '-')
 
 
     # creating tokenizer

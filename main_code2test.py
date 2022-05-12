@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir)
     ptm = args.pretrained_model
-    output_dir = Path(args.output_dir) / ptm.replace('/', '-')    
+    output_dir = Path(args.output_dir) / 'code2test' /ptm.replace('/', '-')    
 
     print('Loading Model and Tokenizer...')
     pretrained_model, tokenizer = load_seq2seq_model_and_tokenizer(
