@@ -1,5 +1,4 @@
 from pathlib import Path
-import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from torch.utils.data import DataLoader
@@ -7,6 +6,7 @@ from utils import set_seed
 from datasets import Code2TestDataset
 from args import parse_code2test_args
 from models import load_seq2seq_model_and_tokenizer, Code2TestModel
+import json
 
 
 if __name__ == '__main__':
@@ -16,6 +16,8 @@ if __name__ == '__main__':
     data_dir = Path(args.data_dir)
     ptm = args.pretrained_model
     output_dir = Path(args.output_dir) / 'code2test' /ptm.replace('/', '-')    
+    with open(output_dir / 'args.json', 'w') as f:
+        json.dump(vars(args), f)
 
     print('Loading Model and Tokenizer...')
     pretrained_model, tokenizer = load_seq2seq_model_and_tokenizer(

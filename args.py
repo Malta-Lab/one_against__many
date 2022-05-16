@@ -9,6 +9,7 @@ def parse_codesearch_args(mode='train'):
     parser.add_argument('-ptm', '--pretrained_model',
                         type=str, default='microsoft/codebert-base')
     parser.add_argument('-bs', '--batch_size', type=int, default=32)
+    parser.add_argument('--prefix', action='store_true')
 
     if mode == 'train':
         return training_args(parser)

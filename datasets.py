@@ -14,6 +14,7 @@ def load_dataset(path):
         labels = f.readlines()
     return data, labels
 
+
 def read_jsonl(filepath):
     with open(filepath, 'r') as json_file:
         json_list = list(json_file)
@@ -31,8 +32,8 @@ class Code2TestDataset(Dataset):
         self.full_path = self.path / split
         self.data, self.labels = load_dataset(self.full_path)
         self.tokenizer = tokenizer
-        if add_prefix: 
-            self.data = [f'Code to test: {d}' for d in self.data]
+        if add_prefix:
+            self.data = [f'code to test: {d}' for d in self.data]
 
     def __len__(self):
         return len(self.data)
@@ -42,8 +43,10 @@ class Code2TestDataset(Dataset):
         target = self.labels[idx]
 
         if self.tokenizer:
-            source = self.tokenizer(source, max_length=128, padding='max_length', truncation=True, return_tensors='pt')
-            target = self.tokenizer(target, max_length=128, padding='max_length', truncation=True, return_tensors='pt')
+            source = self.tokenizer(
+                source, max_length=128, padding='max_length', truncation=True, return_tensors='pt')
+            target = self.tokenizer(
+                target, max_length=128, padding='max_length', truncation=True, return_tensors='pt')
             source = squeeze_dict(source)
             target = squeeze_dict(target)
 
@@ -51,21 +54,24 @@ class Code2TestDataset(Dataset):
 
 
 class CodeSearchNetDataset(Dataset):
-    def __init__(self, data_path, tokenizer):
+    def __init__(self, data_path, tokenizer, prefix=False):
         self.data = read_jsonl(data_path)
         self.tokenizer = tokenizer
+        self.prefix = prefix
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
         instance = self.data[idx]
-        code = instance["code"]
+        code = instance["code"] if not self.prefix else f'code search: {instance["code"]}'
         comment = instance["docstring"]
         url = instance["url"]
 
-        code = self.tokenizer(code, max_length=128, truncation=True, return_tensors='pt', padding='max_length')
-        comment = self.tokenizer(comment, max_length=128, truncation=True, return_tensors='pt', padding='max_length')
+        code = self.tokenizer(code, max_length=128, truncation=True,
+                              return_tensors='pt', padding='max_length')
+        comment = self.tokenizer(
+            comment, max_length=128, truncation=True, return_tensors='pt', padding='max_length')
         code = squeeze_dict(code)
         comment = squeeze_dict(comment)
 

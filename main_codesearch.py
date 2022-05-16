@@ -6,6 +6,7 @@ import pytorch_lightning as pl
 from args import parse_codesearch_args
 from utils import set_seed
 from pathlib import Path
+import json
 
 if __name__ == '__main__':
     args = parse_codesearch_args('train')
@@ -17,14 +18,16 @@ if __name__ == '__main__':
     language = args.language
     ptm = args.pretrained_model
     output_dir = Path(args.output_dir) / 'codesearch' / language / ptm.replace('/', '-')
+    with open(output_dir / 'args.json', 'w') as f:
+        json.dump(vars(args), f)
 
 
     # creating tokenizer
     tokenizer = load_tokenizer(ptm, './pretrained_stuff')
 
     # creating dataset
-    train_dataset = CodeSearchNetDataset(data_dir / language / 'train.jsonl', tokenizer)
-    val_dataset = CodeSearchNetDataset(data_dir / language / 'valid.jsonl', tokenizer)
+    train_dataset = CodeSearchNetDataset(data_dir / language / 'train.jsonl', tokenizer, args.prefix)
+    val_dataset = CodeSearchNetDataset(data_dir / language / 'valid.jsonl', tokenizer, args.prefix)
     trainloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     valloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
 
