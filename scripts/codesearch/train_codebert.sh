@@ -1,4 +1,4 @@
-ckpt_path='/home/parraga/projects/_masters/code_search/checkpoints'
+ckpt_path='/home/parraga/projects/_masters/multitask_code/checkpoints/codesearch'
 model='microsoft-codebert-base'
 ptm='microsoft/codebert-base'
 
