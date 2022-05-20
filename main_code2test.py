@@ -15,7 +15,8 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir)
     ptm = args.pretrained_model
-    output_dir = Path(args.output_dir) / 'code2test' /ptm.replace('/', '-')    
+    output_dir = Path(args.output_dir) / 'code2test' /ptm.replace('/', '-')  
+    output_dir.mkdir(parents=True, exist_ok=True)  
     with open(output_dir / 'args.json', 'w') as f:
         json.dump(vars(args), f)
 

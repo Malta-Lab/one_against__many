@@ -1,14 +1,14 @@
 import torch
 from utils import set_seed
-from models import Code2TestModel, load_model_and_tokenizer
-from dataset import Code2TestDataset
+from models import Code2TestModel, load_seq2seq_model_and_tokenizer
+from datasets import Code2TestDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from metrics import bleu, tokenized_bleu, alpha_bleu
 from utils import dict_to_device, set_seed
 import json
 from pathlib import Path
-import argparse
+from args import parse_code2test_args
 
 
 def postprocess_text(preds, labels):
@@ -20,17 +20,14 @@ def postprocess_text(preds, labels):
 
 if __name__ == '__main__':
     # TODO: Need to fix the method so that the new line error do not happen
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-ptm', '--pretrained_model', type=str, required=True)
-    parser.add_argument('-ckpt', '--checkpoint', type=str, required=True)
-    args = parser.parse_args()
+    args = parse_code2test_args('eval')
 
     set_seed()
     pretrained_model_name = args.pretrained_model
     checkpoint_path = args.checkpoint
     output_dir = Path('/'.join(checkpoint_path.split('/')[:-1]))
 
-    pretrained_model, tokenizer = load_model_and_tokenizer(
+    pretrained_model, tokenizer = load_seq2seq_model_and_tokenizer(
         pretrained_model_name)
     model = Code2TestModel.load_from_checkpoint(
         checkpoint_path=checkpoint_path, pretrained_model=pretrained_model, tokenizer=tokenizer)

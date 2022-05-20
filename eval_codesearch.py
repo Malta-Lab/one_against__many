@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
-from args import parse_args
+from args import parse_codesearch_args
 from datasets import CodeSearchNetDataset
-from models import CodeSearchModel
+from models import CodeSearchModel, load_tokenizer
 from pathlib import Path
 from tqdm import tqdm
 import torch
@@ -13,7 +13,7 @@ import json
 if __name__ == '__main__':
     set_seed()
 
-    args = parse_args('evaluation')
+    args = parse_codesearch_args('eval')
     data_dir = Path(args.data_dir)
     language = args.language
     pretrained_model = args.pretrained_model
@@ -22,6 +22,7 @@ if __name__ == '__main__':
 
     model = CodeSearchModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
                                                  model_name=pretrained_model, cache_path='./pretrained_stuff')
+    tokenizer = load_tokenizer(model_name=pretrained_model, cache_path='./pretrained_stuff')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
     model.eval()
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     with torch.no_grad():
         metrics = {}
         for partition in partitions:
-            eval_dataset = CodeSearchNetDataset(data_dir / language / str(partition+'.jsonl'), model.tokenizer)
+            eval_dataset = CodeSearchNetDataset(data_dir, split=partition, tokenizer=tokenizer, prefix=args.prefix, language=language)
             eval_loader = DataLoader(eval_dataset, batch_size=32, shuffle=False)
 
             queries, values, query_idxs, value_idxs = [], [], [], []

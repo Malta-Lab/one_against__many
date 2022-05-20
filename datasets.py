@@ -223,9 +223,6 @@ class Code2TestDataset(BaseDataset):
         self.examples = [{'source': self.data[i], 'target':self.labels[i]}
                          for i in range(len(self.data))]
 
-    def __len__(self):
-        return len(self.data)
-
     def __getitem__(self, idx):
         example = self.examples[idx]
         source = example['source']
@@ -242,14 +239,11 @@ class Code2TestDataset(BaseDataset):
 class CodeSearchNetDataset(BaseDataset):
     def __init__(self, data_path=Path('./datasets/CodeSearchNet'), split='train', tokenizer=None, prefix=False, language='javascript'):
         super().__init__(data_path=data_path, split=split, tokenizer=tokenizer, prefix=prefix)
-        self.examples = read_jsonl(data_path / language / f'{split}.jsonl')
-        self.langauge = language
+        self.language = language
+        self.examples = read_jsonl(data_path / self.language / f'{split}.jsonl')
         if self.prefix:
             for i in self.examples:
                 i['code'] = f'code search: {i["code"]}'
-
-    def __len__(self):
-        return len(self.data)
 
     def __getitem__(self, idx):
         instance = self.examples[idx]
@@ -258,8 +252,8 @@ class CodeSearchNetDataset(BaseDataset):
         url = instance["url"]
         
         if self.tokenizer:
-            code = tokenize(code, self.tokenizer)
-            comment = tokenize(comment, self.tokenizer)
+            code = tokenize(self.tokenizer, code)
+            comment = tokenize(self.tokenizer, comment)
             code = squeeze_dict(code)
             comment = squeeze_dict(comment)
 

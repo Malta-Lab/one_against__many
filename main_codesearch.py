@@ -1,4 +1,5 @@
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.loggers import TensorBoardLogger
 from models import CodeSearchModel, load_tokenizer
 from datasets import CodeSearchNetDataset
 from torch.utils.data import DataLoader
@@ -18,6 +19,7 @@ if __name__ == '__main__':
     language = args.language
     ptm = args.pretrained_model
     output_dir = Path(args.output_dir) / 'codesearch' / language / ptm.replace('/', '-')
+    output_dir.mkdir(parents=True, exist_ok=True)
     with open(output_dir / 'args.json', 'w') as f:
         json.dump(vars(args), f)
 
@@ -26,8 +28,8 @@ if __name__ == '__main__':
     tokenizer = load_tokenizer(ptm, './pretrained_stuff')
 
     # creating dataset
-    train_dataset = CodeSearchNetDataset(data_dir / language / 'train.jsonl', tokenizer, args.prefix)
-    val_dataset = CodeSearchNetDataset(data_dir / language / 'valid.jsonl', tokenizer, args.prefix)
+    train_dataset = CodeSearchNetDataset(data_dir,'train', tokenizer, args.prefix, language)
+    val_dataset = CodeSearchNetDataset(data_dir, 'valid', tokenizer, args.prefix, language)
     trainloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     valloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
 
@@ -45,6 +47,8 @@ if __name__ == '__main__':
 
     early_stop_callback = EarlyStopping('val_loss', patience=2)
 
+    logger = TensorBoardLogger(save_dir=output_dir)
+
     # creating trainer
     trainer = pl.Trainer(gpus=args.gpus,
                          max_epochs=args.epochs,
@@ -52,5 +56,6 @@ if __name__ == '__main__':
                          strategy='ddp',
                          callbacks=[checkpoint_callback,
                                     early_stop_callback,
-                                    ])
+                                    ],
+                        logger=logger)
     trainer.fit(model, trainloader, valloader)
