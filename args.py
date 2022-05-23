@@ -1,6 +1,35 @@
 import argparse
 # TODO: adapt to support multi-task training arguments
 
+
+def parse_multi_task_args(mode='train'):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-data', '--data_dir', type=str,
+                        default='datasets/')
+    parser.add_argument('-ptm', '--pretrained_model',
+                        type=str, default='microsoft/codebert-base')
+    parser.add_argument('-bs', '--batch_size', type=int, default=8)
+    parser.add_argument('--same_probs', action='store_true')
+    parser.add_argument('-i', '--iterations', type=int, default=1000)
+    parser.add_argument('-vi', '--val_iterations', type=int, default=100)
+    parser.add_argument('--prefix', action='store_true')
+    parser.add_argument('--lang_prefix', action='store_true')
+    parser.add_argument('--tasks', type=str, nargs='+', choices=[
+                        'codesearch', 'code2test', 'clone', 'concode', 'defect', 'refine', 'translate', 'summarization'], default=['codesearch', 'code2test'])
+    parser.add_argument('--cs_lang', type=str, nargs='+', default=['javascript'])
+    parser.add_argument('--sum_lang', type=str, nargs='+', default=['javascript'])
+    parser.add_argument('--translate_order', type=str, default='java-cs')
+    parser.add_argument('--refine_mode', type=str, default='small')
+    parser.add_argument('--shuffle', action='store_true')
+
+    if mode == 'train':
+        return training_args(parser)
+    elif mode == 'eval':
+        return evaluation_args(parser)
+
+    return parser.parse_args()
+
+
 def parse_codesearch_args(mode='train'):
     parser = argparse.ArgumentParser()
     parser.add_argument('-data', '--data_dir', type=str,
@@ -26,7 +55,7 @@ def parse_code2test_args(mode='train'):
                         default='datasets/methods2test/corpus/raw/fm/')
     parser.add_argument('-ptm', '--pretrained_model', type=str,
                         default='Salesforce/codet5-small')
-    parser.add_argument('-bs', '--batch_size', type=int, default=32)
+    parser.add_argument('-bs', '--batch_size', type=int, default=8)
     parser.add_argument('--prefix', action='store_true')
 
     if mode == 'train':

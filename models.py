@@ -3,8 +3,8 @@ from pathlib import Path
 import torch.optim as optim
 import torch.nn as nn
 import torch
-from transformers import (EncoderDecoderModel, T5ForConditionalGeneration, T5Model, RobertaTokenizer, 
-                        AutoModel, AutoTokenizer, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup)
+from transformers import (EncoderDecoderModel, T5ForConditionalGeneration, T5Model, RobertaTokenizer,
+                          AutoModel, AutoTokenizer, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup)
 
 
 def load_tokenizer(model_name, cache_path='./pretrained_stuff'):
@@ -41,7 +41,8 @@ def load_seq2seq_model_and_tokenizer(model_name, cache_path='./pretrained_stuff'
     else:
         model = EncoderDecoderModel.from_encoder_decoder_pretrained(
             model_name, model_name, cache_dir=cache_path)
-        tokenizer = AutoTokenizer.from_pretrained('microsoft/codebert-base', cache_dir=cache_path)
+        tokenizer = AutoTokenizer.from_pretrained(
+            'microsoft/codebert-base', cache_dir=cache_path)
         tokenizer.bos_token = tokenizer.cls_token
         tokenizer.eos_token = tokenizer.sep_token
         model.config.decoder_start_token_id = tokenizer.bos_token_id
@@ -162,6 +163,85 @@ class Code2TestModel(pl.LightningModule):
 
     def generate(self, **inputs):
         return self.pretrained_model.generate(**inputs)
+
+    def configure_optimizers(self):
+        optimizer = optim.Adam(self.parameters(), lr=2e-5)
+        if self.scheduler == 'step':
+            scheduler = optim.lr_scheduler.StepLR(
+                optimizer, step_size=1, gamma=0.1)
+        elif self.scheduler == 'linear':
+            scheduler = get_linear_schedule_with_warmup(
+                optimizer, num_warmup_steps=0, num_training_steps=self.train_size*self.epochs)
+        elif self.scheduler == 'cosine':
+            scheduler = get_cosine_schedule_with_warmup(
+                optimizer, num_warmup_steps=0, num_training_steps=self.train_size*self.epochs)
+        elif self.scheduler == 'plateau':
+            scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer, mode='min', patience=3)
+        return [optimizer], [scheduler]
+
+
+class MultiTaskModel(pl.LightningModule):
+    def __init__(self, pretrained_model, tokenizer, train_size=None, epochs=None, scheduler='step'):
+        super().__init__()
+        self.pretrained_model = pretrained_model
+        if 't5' in self.pretrained_model.__class__.__name__:
+            self.encoder = T5Encoder(self.pretrained_model)
+        else:
+            self.encoder = BertEncoder(self.pretrained_model)
+        self.tokenizer = tokenizer
+        self.train_size = train_size
+        self.epochs = epochs
+        self.scheduler = scheduler
+        self.criterion = nn.CrossEntropyLoss()
+
+    def seq_forward(self, source, target):
+        labels = target['input_ids'].clone()
+        labels[labels == self.tokenizer.pad_token_id] = -100
+        outputs = self.pretrained_model(input_ids=source['input_ids'],
+                                        attention_mask=source['attention_mask'],
+                                        labels=labels)
+        loss = outputs[0]
+        return loss
+
+    def cs_forward(self, source, target):
+        encoded_code, encoded_comment = self.encoder(
+            **source), self.encoder(**target)
+        scores = torch.einsum("ab,cb->ac", encoded_code, encoded_comment)
+        loss = self.criterion(scores, torch.arange(
+            encoded_code.size(0), device=scores.device))
+        return loss
+
+    def generate(self, **inputs):
+        return self.pretrained_model.generate(**inputs)
+
+    def training_step(self, batch, batch_idx):
+        source, target, task = batch
+
+        if 'codesearch' in task:
+            loss = self.cs_forward(source, target)
+        else:
+            loss = self.seq_forward(source, target)
+
+        self.log('train_loss', loss)
+        self.log(f'{task}_train_loss', loss)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        source = batch[0]
+        target = batch[1]
+        task = batch[2][0]
+
+        if task == 'codesearch':
+            loss = self.cs_forward(source, target)
+        else:
+            loss = self.seq_forward(source, target)
+
+        self.log('val_loss', loss)
+        self.log(f'{task}_val_loss', loss)
+
+        return loss
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=2e-5)

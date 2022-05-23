@@ -29,7 +29,7 @@ def read_jsonl(filepath):
 
 
 def tokenize(tokenizer, source):
-    return tokenizer(source, max_length=128, padding='max_length', truncation=True, return_tensors='pt')
+    return tokenizer(str(source), max_length=128, padding='max_length', truncation=True, return_tensors='pt')
 
 
 class Example(object):
@@ -43,12 +43,16 @@ class Example(object):
         self.idx = idx
         self.source = source
         self.target = target
+        self.task = None
 
     def __repr__(self):
         return str(self.__dict__)
 
     def __getitem__(self, key):
         return self.__dict__[key]
+
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
 
 
 def read_translate_examples(filename, data_num):
@@ -215,7 +219,8 @@ class BaseDataset(Dataset):
 class Code2TestDataset(BaseDataset):
     def __init__(self, data_path=Path('datasets/methods2test/corpus/raw/fm/'), split='train', tokenizer=None, prefix=False):
         super().__init__(data_path=data_path, split=split, tokenizer=tokenizer, prefix=prefix)
-        self.full_path = self.data_path / split
+        self.split = 'eval' if split == 'valid' else split
+        self.full_path = self.data_path / self.split
         self.data, self.labels = load_methods_2_test_dataset(self.full_path)
         self.tokenizer = tokenizer
         if prefix:
@@ -237,13 +242,13 @@ class Code2TestDataset(BaseDataset):
 
 
 class CodeSearchNetDataset(BaseDataset):
-    def __init__(self, data_path=Path('./datasets/CodeSearchNet'), split='train', tokenizer=None, prefix=False, language='javascript'):
+    def __init__(self, data_path=Path('./datasets/CodeSearchNet'), split='train', tokenizer=None, prefix=False, language='javascript', task='codesearch', lang_prefix=False):
         super().__init__(data_path=data_path, split=split, tokenizer=tokenizer, prefix=prefix)
         self.language = language
         self.examples = read_jsonl(data_path / self.language / f'{split}.jsonl')
         if self.prefix:
             for i in self.examples:
-                i['code'] = f'code search: {i["code"]}'
+                i['code'] = f'{task} {self.language}: {i["code"]}' if not lang_prefix else f'{task}: {i["code"]}' 
 
     def __getitem__(self, idx):
         instance = self.examples[idx]
@@ -261,7 +266,7 @@ class CodeSearchNetDataset(BaseDataset):
 
 
 class TranslateDataset(Dataset):
-    def __init__(self, data_path=Path('./datasets/multi_task/translate'), split='train', tokenizer=None, prefix=False, mode='java to cs'):
+    def __init__(self, data_path=Path('./datasets/multi_task/translate'), split='train', tokenizer=None, prefix=False, mode='java-cs'):
         self.data_path = Path(data_path)
         self.prefix = prefix
         self.split = split
@@ -269,7 +274,7 @@ class TranslateDataset(Dataset):
         self.mode = mode
         self.java_path = self.data_path / f'{self.split}.java-cs.txt.java'
         self.csharp_path = self.data_path / f'{self.split}.java-cs.txt.cs'
-        if self.mode == 'java to cs':
+        if self.mode == 'java-cs':
             self.examples = read_translate_examples(
                 f'{str(self.java_path)},{str(self.csharp_path)}', data_num=None)
         else:
@@ -328,6 +333,7 @@ class RefineDataset(BaseDataset):
 class ConcodeDataset(BaseDataset):
     def __init__(self, data_path=Path('./datasets/multi_task/concode'), split='train', tokenizer=None, prefix=False):
         super().__init__(data_path=data_path, split=split, tokenizer=tokenizer, prefix=prefix)
+        self.split = 'dev' if split == 'valid' else split
         self.examples = read_concode_examples(
             f'{self.data_path}/{self.split}.json', data_num=None)
         if self.prefix:
@@ -393,50 +399,51 @@ class CloneDataset(BaseDataset):
 
 
 class MultiTaskDataset(Dataset):
-    # TODO: add a field in the return indicating which task is being performed
-    # TODO: receive the list of datasets as a parameter list
-    def __init__(self, datasets, tokenizer=None, iterations=10000, same_probs=False):
+    def __init__(self, datasets, bsz, tokenizer=None, iterations=1000, same_probs=False):
         super().__init__()
-        self.bsz = 8
+        self.bsz = bsz
         self.iterations = iterations
         self.same_probs = same_probs
         self.tokenizer = tokenizer
-        self.datasets = [d.examples for d in datasets]
+        self.datasets = {k:v.examples for k,v in datasets.items()}
+        self.dataset_names = list(self.datasets.keys())
         self.probabilities = self.__probabilities_codet5()
         self.examples = self.__compose_dataset()
+
 
     def __len__(self):
         return len(self.examples)
 
     def __getitem__(self, idx):
         example = self.examples[idx]
-        source = example['source']
-        target = example['target']
-
+        task = example['task']
+        source = example['source'] if 'codesearch' not in task else example['code']
+        target = example['target'] if 'codesearch' not in task else example['docstring']
         if self.tokenizer:
             source = tokenize(self.tokenizer, source)
             target = tokenize(self.tokenizer, target)
             source = squeeze_dict(source)
             target = squeeze_dict(target)
-        return source, target
+        return source, target, task
 
     def __compose_dataset(self):
         final_dataset = []
         for _ in range(self.iterations):
             if self.same_probs:
-                choice = np.random.choice(self.datasets)
+                choice = np.random.choice(self.dataset_names)
             else:
-                choice = np.random.choice(self.datasets, p=self.probabilities)
+                choice = np.random.choice(self.dataset_names, p=self.probabilities)
 
             for _ in range(self.bsz):
-                final_dataset.append(choice.pop(
-                    random.randint(0, len(choice)-1)))
-
+                item = self.datasets[choice].pop(random.randint(0,len(choice)-1))
+                item['task'] = choice
+                final_dataset.append(item)
+        
         return final_dataset
 
     def __probabilities_codet5(self):
         """Same probs calculation done in CodeT5 source code"""
-        probs = [len(x) for x in self.datasets]
+        probs = [len(x) for x in self.datasets.values()]
         probs = [x / sum(probs) for x in probs]
         probs = [x ** 0.7 for x in probs]
         probs = [x / sum(probs) for x in probs]

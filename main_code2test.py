@@ -6,6 +6,7 @@ from utils import set_seed
 from datasets import Code2TestDataset
 from args import parse_code2test_args
 from models import load_seq2seq_model_and_tokenizer, Code2TestModel
+from pytorch_lightning.loggers import TensorBoardLogger
 import json
 
 
@@ -46,10 +47,13 @@ if __name__ == '__main__':
 
     early_stop_callback = EarlyStopping('val_loss', patience=2)
 
+    logger = TensorBoardLogger(save_dir=output_dir)
+
     print('Training...')
     trainer = pl.Trainer(gpus=args.gpus,
                          max_epochs=args.epochs,
                          callbacks=[checkpoint_callback,
                                     early_stop_callback],
-                         strategy='ddp')
+                         strategy='ddp',
+                         logger=logger)
     trainer.fit(model, train_loader, eval_loader)
