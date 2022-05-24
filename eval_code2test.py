@@ -1,6 +1,6 @@
 import torch
 from utils import set_seed
-from models import Code2TestModel, load_seq2seq_model_and_tokenizer
+from models import Code2TestModel, load_seq2seq_model_and_tokenizer, MultiTaskModel
 from datasets import Code2TestDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -24,13 +24,17 @@ if __name__ == '__main__':
 
     set_seed()
     pretrained_model_name = args.pretrained_model
-    checkpoint_path = args.checkpoint
+    checkpoint_path = args.checkpoint_path
     output_dir = Path('/'.join(checkpoint_path.split('/')[:-1]))
-
     pretrained_model, tokenizer = load_seq2seq_model_and_tokenizer(
-        pretrained_model_name)
-    model = Code2TestModel.load_from_checkpoint(
-        checkpoint_path=checkpoint_path, pretrained_model=pretrained_model, tokenizer=tokenizer)
+            pretrained_model_name)
+    if args.is_multitask:
+        model = MultiTaskModel.load_from_checkpoint(checkpoint_path=checkpoint_path,
+                                                    pretrained_model=pretrained_model,
+                                                    tokenizer=tokenizer, cache_path='./pretrained_stuff')
+    else:
+        model = Code2TestModel.load_from_checkpoint(
+            checkpoint_path=checkpoint_path, pretrained_model=pretrained_model, tokenizer=tokenizer, cache_path='./pretrained_stuff')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     dataset = Code2TestDataset(
         path='./methods2test/corpus/raw/fm/', split='test', tokenizer=tokenizer)

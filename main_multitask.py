@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     early_stop_callback = EarlyStopping('val_loss', patience=2)
 
-    logger = TensorBoardLogger(save_dir=output_dir)
+    logger = TensorBoardLogger(save_dir='lightning_logs/multitask', name=args.output_dir)
 
     print('Training...')
     trainer = pl.Trainer(gpus=args.gpus,

@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 from args import parse_codesearch_args
 from datasets import CodeSearchNetDataset
-from models import CodeSearchModel, load_tokenizer
+from models import CodeSearchModel, load_tokenizer, load_seq2seq_model_and_tokenizer, MultiTaskModel
 from pathlib import Path
 from tqdm import tqdm
 import torch
@@ -19,8 +19,14 @@ if __name__ == '__main__':
     pretrained_model = args.pretrained_model
     partitions = ['test', 'valid']
     output_dir = Path('/'.join(args.checkpoint_path.split('/')[:-1]))
-
-    model = CodeSearchModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
+    if args.is_multitask:
+        model_base, tokenizer = load_seq2seq_model_and_tokenizer(
+            pretrained_model)
+        model = MultiTaskModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
+                                                    pretrained_model=model_base,
+                                                    tokenizer=tokenizer)
+    else:
+        model = CodeSearchModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
                                                  model_name=pretrained_model, cache_path='./pretrained_stuff')
     tokenizer = load_tokenizer(model_name=pretrained_model, cache_path='./pretrained_stuff')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

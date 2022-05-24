@@ -1,6 +1,4 @@
 import argparse
-# TODO: adapt to support multi-task training arguments
-
 
 def parse_multi_task_args(mode='train'):
     parser = argparse.ArgumentParser()
@@ -78,4 +76,5 @@ def training_args(parser):
 
 def evaluation_args(parser):
     parser.add_argument('-ckpt', '--checkpoint_path', type=str, default=None)
+    parser.add_argument('-mt', '--is_multitask', action='store_true')
     return parser.parse_args()
