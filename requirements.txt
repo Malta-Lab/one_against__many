@@ -4,3 +4,4 @@ numpy
 nltk
 pytorch-lightning
 torchmetrics
+pandas

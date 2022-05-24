@@ -13,22 +13,30 @@ def build_dataset_dict(args, tokenizer, split='train'):
     datasets = {}
     for task in args.tasks:
         if task == 'code2test':
+            print('Adding Code2test')
             datasets['code2test'] = Code2TestDataset(split=split, tokenizer=tokenizer, prefix=args.prefix)
         elif task == 'codesearch':
             for lang in args.cs_lang:
+                print('Adding CodeSearch for {}'.format(lang))
                 datasets['codesearch_' + lang] = CodeSearchNetDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, language=lang, lang_prefix=args.lang_prefix)
         elif task == 'summarize':
             for lang in args.sum_lang:
+                print('Adding Summarize for {}'.format(lang))
                 datasets['summarize_' + lang] = CodeSearchNetDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, language=lang, lang_prefix=args.lang_prefix)
         elif task == 'clone':
+            print('Adding Clone')
             datasets['clone'] = CloneDataset(split=split, tokenizer=tokenizer, prefix=args.prefix)
         elif task == 'concode':
+            print('Adding Concode')
             datasets['concode'] = ConcodeDataset(split=split, tokenizer=tokenizer, prefix=args.prefix)
         elif task == 'defect':
+            print('Adding Defect')
             datasets['defect'] = DefectDataset(split=split, tokenizer=tokenizer, prefix=args.prefix)
         elif task == 'refine':
+            print('Adding Refine')
             datasets['refine'] = RefineDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, mode=args.refine_mode)
         elif task == 'translate':
+            print('Adding Translate')
             datasets['translate'] = TranslateDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, mode=args.translate_order)
 
     return datasets
@@ -38,7 +46,7 @@ if __name__ == '__main__':
     set_seed()
 
     ptm = args.pretrained_model
-    output_dir = Path(args.output_dir) / 'multitask' /ptm.replace('/', '-')  
+    output_dir = Path('checkpoints/multitask') / args.output_dir /ptm.replace('/', '-')  
     output_dir.mkdir(parents=True, exist_ok=True)  
     with open(output_dir / 'args.json', 'w') as f:
         json.dump(vars(args), f)

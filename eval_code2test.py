@@ -65,7 +65,7 @@ if __name__ == '__main__':
                 print(
                     f'BLEU: {bleu(preds, ground_truths)} CodeBLEU: {tokenized_bleu(preds, ground_truths, tokenizer)} AlphaBLEU: {alpha_bleu(preds, ground_truths)}')
 
-    with open(output_dir / 'results.json', 'w') as f:
+    with open(output_dir / 'code2test_metrics.json', 'w') as f:
         json.dump({'bleu': bleu(preds, ground_truths),
                    'code_bleu': tokenized_bleu(preds, ground_truths, tokenizer),
                    'alpha_bleu': alpha_bleu(preds, ground_truths)}, f)
