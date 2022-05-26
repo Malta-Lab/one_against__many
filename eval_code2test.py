@@ -36,8 +36,7 @@ if __name__ == '__main__':
         model = Code2TestModel.load_from_checkpoint(
             checkpoint_path=checkpoint_path, pretrained_model=pretrained_model, tokenizer=tokenizer, cache_path='./pretrained_stuff')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    dataset = Code2TestDataset(
-        path='./methods2test/corpus/raw/fm/', split='test', tokenizer=tokenizer)
+    dataset = Code2TestDataset(split='test', tokenizer=tokenizer, prefix=args.prefix)
     dataloader = DataLoader(dataset, batch_size=216, shuffle=False)
 
     model.eval()

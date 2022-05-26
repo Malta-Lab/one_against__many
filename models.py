@@ -62,6 +62,7 @@ class BertEncoder(nn.Module):
         )
 
         embedding = embedding[1]
+        print(embedding)
         return embedding
 
 
@@ -185,15 +186,17 @@ class MultiTaskModel(pl.LightningModule):
     def __init__(self, pretrained_model, tokenizer, train_size=None, epochs=None, scheduler='step'):
         super().__init__()
         self.pretrained_model = pretrained_model
-        if 't5' in self.pretrained_model.__class__.__name__:
-            self.encoder = T5Encoder(self.pretrained_model)
-        else:
-            self.encoder = BertEncoder(self.pretrained_model)
+        self.encoder = T5Encoder(self.pretrained_model)
         self.tokenizer = tokenizer
         self.train_size = train_size
         self.epochs = epochs
         self.scheduler = scheduler
         self.criterion = nn.CrossEntropyLoss()
+
+    def forward(self, source, target):
+        encoded_code = self.encoder(**source)
+        encoded_comment = self.encoder(**target)
+        return encoded_code, encoded_comment
 
     def seq_forward(self, source, target):
         labels = target['input_ids'].clone()
@@ -217,6 +220,7 @@ class MultiTaskModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         source, target, task = batch
+        task = task[0]
 
         if 'codesearch' in task:
             loss = self.cs_forward(source, target)
@@ -229,9 +233,8 @@ class MultiTaskModel(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        source = batch[0]
-        target = batch[1]
-        task = batch[2][0]
+        source, target, task = batch
+        task = task[0]
 
         if task == 'codesearch':
             loss = self.cs_forward(source, target)
