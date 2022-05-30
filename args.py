@@ -18,6 +18,7 @@ def parse_multi_task_args(mode='train'):
     parser.add_argument('--sum_lang', type=str, nargs='+', default=['javascript'])
     parser.add_argument('--translate_order', type=str, default='java-cs')
     parser.add_argument('--refine_mode', type=str, default='small')
+    # Don't run with the following argument
     parser.add_argument('--shuffle', action='store_true')
 
     if mode == 'train':
@@ -37,6 +38,8 @@ def parse_codesearch_args(mode='train'):
                         type=str, default='microsoft/codebert-base')
     parser.add_argument('-bs', '--batch_size', type=int, default=32)
     parser.add_argument('--prefix', action='store_true')
+    parser.add_argument('--multi_task_ckpt', action='store_true')
+    parser.add_argument('--ckpt', '--checkpoint_path', type=str, default=None)
 
     if mode == 'train':
         return training_args(parser)
@@ -46,7 +49,6 @@ def parse_codesearch_args(mode='train'):
     return parser.parse_args()
 
 
-# TODO: edit this method
 def parse_code2test_args(mode='train'):
     parser = argparse.ArgumentParser()
     parser.add_argument('-data', '--data_dir', type=str,
@@ -55,6 +57,8 @@ def parse_code2test_args(mode='train'):
                         default='Salesforce/codet5-small')
     parser.add_argument('-bs', '--batch_size', type=int, default=8)
     parser.add_argument('--prefix', action='store_true')
+    parser.add_argument('--multi_task_ckpt', action='store_true')
+    parser.add_argument('--ckpt', '--checkpoint_path', type=str, default=None)
 
     if mode == 'train':
         return training_args(parser)

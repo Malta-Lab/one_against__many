@@ -1,6 +1,6 @@
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
-from models import CodeSearchModel, load_tokenizer
+from models import CodeSearchModel, load_tokenizer, MultiTaskModel
 from datasets import CodeSearchNetDataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
@@ -30,11 +30,17 @@ if __name__ == '__main__':
     # creating dataset
     train_dataset = CodeSearchNetDataset(data_dir,'train', tokenizer, args.prefix, language)
     val_dataset = CodeSearchNetDataset(data_dir, 'valid', tokenizer, args.prefix, language)
-    trainloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-    valloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
 
     # creating model
-    model = CodeSearchModel(ptm, './pretrained_stuff', train_size=len(trainloader), epochs=args.epochs, scheduler=args.scheduler)
+    if args.multi_task_ckpt:
+        model = MultiTaskModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
+                                                            pretrained_model=ptm,
+                                                            tokenizer=tokenizer, train_size=len(train_loader), 
+                                                            epochs=args.epochs, scheduler=args.scheduler)
+    else:
+        model = CodeSearchModel(ptm, './pretrained_stuff', train_size=len(train_loader), epochs=args.epochs, scheduler=args.scheduler)
 
     # callbacks
     checkpoint_callback = ModelCheckpoint(
@@ -58,4 +64,4 @@ if __name__ == '__main__':
                                     early_stop_callback,
                                     ],
                         logger=logger)
-    trainer.fit(model, trainloader, valloader)
+    trainer.fit(model, train_loader, val_loader)

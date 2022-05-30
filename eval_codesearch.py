@@ -57,5 +57,5 @@ if __name__ == '__main__':
             mrr_value = mrr(queries.data.numpy(), values.data.numpy(), query_idxs, value_idxs)
             metrics[partition] = mrr_value
 
-        with open(output_dir / 'codesearch_metrics.json', 'w') as f:
+        with open(output_dir / f'codesearch_{language}_metrics.json', 'w') as f:
             json.dump(metrics, f)

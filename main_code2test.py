@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from utils import set_seed
 from datasets import Code2TestDataset
 from args import parse_code2test_args
-from models import load_seq2seq_model_and_tokenizer, Code2TestModel
+from models import load_seq2seq_model_and_tokenizer, Code2TestModel, MultiTaskModel
 from pytorch_lightning.loggers import TensorBoardLogger
 import json
 
@@ -16,8 +16,8 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir)
     ptm = args.pretrained_model
-    output_dir = Path(args.output_dir) / 'code2test' /ptm.replace('/', '-')  
-    output_dir.mkdir(parents=True, exist_ok=True)  
+    output_dir = Path(args.output_dir) / 'code2test' / ptm.replace('/', '-')
+    output_dir.mkdir(parents=True, exist_ok=True)
     with open(output_dir / 'args.json', 'w') as f:
         json.dump(vars(args), f)
 
@@ -35,7 +35,14 @@ if __name__ == '__main__':
     eval_loader = DataLoader(
         eval_data, batch_size=args.batch_size, shuffle=False)
 
-    model = Code2TestModel(pretrained_model, tokenizer, train_size=len(train_loader), epochs=args.epochs, scheduler=args.scheduler)
+    if args.multi_task_ckpt:
+        model = model = MultiTaskModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
+                                                            pretrained_model=ptm,
+                                                            tokenizer=tokenizer, train_size=len(train_loader), 
+                                                            epochs=args.epochs, scheduler=args.scheduler)
+    else:
+        model = Code2TestModel(pretrained_model, tokenizer, train_size=len(
+            train_loader), epochs=args.epochs, scheduler=args.scheduler)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=output_dir,
@@ -47,7 +54,8 @@ if __name__ == '__main__':
 
     early_stop_callback = EarlyStopping('val_loss', patience=2)
 
-    logger = TensorBoardLogger(save_dir='lightning_logs/code2test', name=args.output_dir)
+    logger = TensorBoardLogger(
+        save_dir='lightning_logs/code2test', name=args.output_dir)
 
     print('Training...')
     trainer = pl.Trainer(gpus=args.gpus,
