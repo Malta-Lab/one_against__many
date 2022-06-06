@@ -1,6 +1,7 @@
 from pathlib import Path
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 from utils import set_seed
 from datasets import MultiTaskDataset, Code2TestDataset, CloneDataset, CodeSearchNetDataset, ConcodeDataset, DefectDataset, RefineDataset, TranslateDataset
@@ -79,13 +80,14 @@ if __name__ == '__main__':
 
     early_stop_callback = EarlyStopping('val_loss', patience=2)
 
-    logger = TensorBoardLogger(save_dir='lightning_logs/multitask', name=args.output_dir)
+    logger = TensorBoardLogger(save_dir='lightning_logs/multitask', name=str(output_dir))
 
     print('Training...')
     trainer = pl.Trainer(gpus=args.gpus,
                          max_epochs=args.epochs,
+                         accelerator='gpu',
+                         strategy='ddp',
                          callbacks=[checkpoint_callback,
                                     early_stop_callback],
-                         strategy='ddp',
                          logger=logger)
     trainer.fit(model, train_loader, val_loader)

@@ -428,16 +428,27 @@ class MultiTaskDataset(Dataset):
 
     def __compose_dataset(self):
         final_dataset = []
+        datasets_with_instances = self.dataset_names.copy()
+        probs_for_dataset = self.probabilities.copy()
         for _ in range(self.iterations):
+
+            # check for datasets with no instances
+            for dataset in datasets_with_instances:
+                if len(self.datasets[dataset]) < self.bsz:
+                    print(f'removing {dataset}')
+                    probs_for_dataset.remove(probs_for_dataset[datasets_with_instances.index(dataset)])
+                    datasets_with_instances.remove(dataset)
+
             if self.same_probs:
-                choice = np.random.choice(self.dataset_names)
+                choice = np.random.choice(datasets_with_instances)
             else:
-                choice = np.random.choice(self.dataset_names, p=self.probabilities)
+                choice = np.random.choice(datasets_with_instances, p=probs_for_dataset)
 
             for _ in range(self.bsz):
-                item = self.datasets[choice].pop(random.randint(0,len(choice)-1))
+                item = self.datasets[choice].pop(random.randint(0,len(self.datasets[choice])-1))
                 item['task'] = choice
                 final_dataset.append(item)
+                
         
         return final_dataset
 
