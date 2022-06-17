@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     data_dir = Path(args.data_dir)
     ptm = args.pretrained_model
-    output_dir = Path(args.output_dir) / 'code2test' / ptm.replace('/', '-')
+    output_dir = Path('checkpoints/code2test') / args.output_dir /ptm.replace('/', '-')  
     output_dir.mkdir(parents=True, exist_ok=True)
     with open(output_dir / 'args.json', 'w') as f:
         json.dump(vars(args), f)
@@ -35,11 +35,11 @@ if __name__ == '__main__':
     eval_loader = DataLoader(
         eval_data, batch_size=args.batch_size, shuffle=False)
 
-    if args.multi_task_ckpt:
-        model = model = MultiTaskModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
-                                                            pretrained_model=ptm,
+    if args.checkpoint_path is not None:
+        model = MultiTaskModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
+                                                            pretrained_model=pretrained_model,
                                                             tokenizer=tokenizer, train_size=len(train_loader), 
-                                                            epochs=args.epochs, scheduler=args.scheduler)
+                                                            epochs=args.epochs, scheduler=args.scheduler, exclusive_task='code2test')
     else:
         model = Code2TestModel(pretrained_model, tokenizer, train_size=len(
             train_loader), epochs=args.epochs, scheduler=args.scheduler)
@@ -54,8 +54,7 @@ if __name__ == '__main__':
 
     early_stop_callback = EarlyStopping('val_loss', patience=2)
 
-    logger = TensorBoardLogger(
-        save_dir='lightning_logs/code2test', name=args.output_dir)
+    logger = TensorBoardLogger(save_dir='lightning_logs/', name=str(output_dir))
 
     print('Training...')
     trainer = pl.Trainer(gpus=args.gpus,

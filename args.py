@@ -38,8 +38,7 @@ def parse_codesearch_args(mode='train'):
                         type=str, default='microsoft/codebert-base')
     parser.add_argument('-bs', '--batch_size', type=int, default=32)
     parser.add_argument('--prefix', action='store_true')
-    parser.add_argument('--multi_task_ckpt', action='store_true')
-    parser.add_argument('--ckpt', '--checkpoint_path', type=str, default=None)
+    parser.add_argument('-ckpt', '--checkpoint_path', type=str, default=None)
 
     if mode == 'train':
         return training_args(parser)
@@ -57,8 +56,7 @@ def parse_code2test_args(mode='train'):
                         default='Salesforce/codet5-small')
     parser.add_argument('-bs', '--batch_size', type=int, default=8)
     parser.add_argument('--prefix', action='store_true')
-    parser.add_argument('--multi_task_ckpt', action='store_true')
-    parser.add_argument('--ckpt', '--checkpoint_path', type=str, default=None)
+    parser.add_argument('-ckpt', '--checkpoint_path', type=str, default=None)
 
     if mode == 'train':
         return training_args(parser)
@@ -79,6 +77,5 @@ def training_args(parser):
 
 
 def evaluation_args(parser):
-    parser.add_argument('-ckpt', '--checkpoint_path', type=str, default=None)
     parser.add_argument('-mt', '--is_multitask', action='store_true')
     return parser.parse_args()

@@ -183,7 +183,7 @@ class Code2TestModel(pl.LightningModule):
 
 
 class MultiTaskModel(pl.LightningModule):
-    def __init__(self, pretrained_model, tokenizer, train_size=None, epochs=None, scheduler='step'):
+    def __init__(self, pretrained_model, tokenizer, train_size=None, epochs=None, scheduler='step', exclusive_task=False):
         super().__init__()
         self.pretrained_model = pretrained_model
         self.encoder = T5Encoder(self.pretrained_model)
@@ -191,12 +191,16 @@ class MultiTaskModel(pl.LightningModule):
         self.train_size = train_size
         self.epochs = epochs
         self.scheduler = scheduler
+        self.exclusive_task = exclusive_task
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, source, target):
         encoded_code = self.encoder(**source)
         encoded_comment = self.encoder(**target)
         return encoded_code, encoded_comment
+
+    def generate(self, **inputs):
+        return self.pretrained_model.generate(**inputs)
 
     def seq_forward(self, source, target):
         labels = target['input_ids'].clone()
@@ -215,34 +219,53 @@ class MultiTaskModel(pl.LightningModule):
             encoded_code.size(0), device=scores.device))
         return loss
 
-    def generate(self, **inputs):
-        return self.pretrained_model.generate(**inputs)
-
     def training_step(self, batch, batch_idx):
-        source, target, task = batch
-        task = task[0]
-
-        if 'codesearch' in task:
-            loss = self.cs_forward(source, target)
-        else:
+        if self.exclusive_task == 'code2test':
+            source, target = batch
             loss = self.seq_forward(source, target)
+            self.log('train_loss', loss)
+            return loss
+        elif self.exclusive_task == 'codesearch':
+            source, target = batch
+            loss = self.cs_forward(source, target)
+            self.log('train_loss', loss)
+            return loss
+        else:
+            source, target, task = batch
+            task = task[0]
 
-        self.log('train_loss', loss)
-        self.log(f'{task}_train_loss', loss)
+            if 'codesearch' in task:
+                loss = self.cs_forward(source, target)
+            else:
+                loss = self.seq_forward(source, target)
+
+            self.log('train_loss', loss)
+            self.log(f'{task}_train_loss', loss)
 
         return loss
 
     def validation_step(self, batch, batch_idx):
-        source, target, task = batch
-        task = task[0]
-
-        if task == 'codesearch':
-            loss = self.cs_forward(source, target)
-        else:
+        if self.exclusive_task == 'code2test':
+            source, target = batch
             loss = self.seq_forward(source, target)
+            self.log('val_loss', loss)
+            return loss
+        elif self.exclusive_task == 'codesearch':
+            source, target = batch
+            loss = self.cs_forward(source, target)
+            self.log('val_loss', loss)
+            return loss
+        else:
+            source, target, task = batch
+            task = task[0]
 
-        self.log('val_loss', loss)
-        self.log(f'{task}_val_loss', loss)
+            if task == 'codesearch':
+                loss = self.cs_forward(source, target)
+            else:
+                loss = self.seq_forward(source, target)
+
+            self.log('val_loss', loss)
+            self.log(f'{task}_val_loss', loss)
 
         return loss
 
