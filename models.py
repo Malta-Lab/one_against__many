@@ -226,7 +226,7 @@ class MultiTaskModel(pl.LightningModule):
             self.log('train_loss', loss)
             return loss
         elif self.exclusive_task == 'codesearch':
-            source, target = batch
+            source, target, _ = batch
             loss = self.cs_forward(source, target)
             self.log('train_loss', loss)
             return loss
@@ -251,7 +251,7 @@ class MultiTaskModel(pl.LightningModule):
             self.log('val_loss', loss)
             return loss
         elif self.exclusive_task == 'codesearch':
-            source, target = batch
+            source, target, _ = batch
             loss = self.cs_forward(source, target)
             self.log('val_loss', loss)
             return loss

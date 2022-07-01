@@ -1,6 +1,6 @@
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
-from models import CodeSearchModel, load_tokenizer, MultiTaskModel
+from models import CodeSearchModel, load_tokenizer, MultiTaskModel, load_seq2seq_model_and_tokenizer
 from datasets import CodeSearchNetDataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     data_dir = Path(args.data_dir)
     language = args.language
     ptm = args.pretrained_model
-    output_dir = Path(args.output_dir) / 'codesearch' / language / ptm.replace('/', '-')
+    output_dir = Path('checkpoints/codesearch') / args.output_dir / language / ptm.replace('/', '-')
     output_dir.mkdir(parents=True, exist_ok=True)
     with open(output_dir / 'args.json', 'w') as f:
         json.dump(vars(args), f)
@@ -34,11 +34,14 @@ if __name__ == '__main__':
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
 
     # creating model
-    if args.multi_task_ckpt:
+    if args.checkpoint_path is not None:
+        pretrained_model, tokenizer = load_seq2seq_model_and_tokenizer(
+        ptm)
         model = MultiTaskModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path,
-                                                            pretrained_model=ptm,
+                                                            pretrained_model=pretrained_model,
                                                             tokenizer=tokenizer, train_size=len(train_loader), 
-                                                            epochs=args.epochs, scheduler=args.scheduler)
+                                                            epochs=args.epochs, scheduler=args.scheduler, exclusive_task='codesearch')
+    # TODO test just copying the encoder part of the model into CodeSearch class
     else:
         model = CodeSearchModel(ptm, './pretrained_stuff', train_size=len(train_loader), epochs=args.epochs, scheduler=args.scheduler)
 
@@ -53,7 +56,7 @@ if __name__ == '__main__':
 
     early_stop_callback = EarlyStopping('val_loss', patience=2)
 
-    logger = TensorBoardLogger(save_dir='lightning_logs/codesearch', name=args.output_dir)
+    logger = TensorBoardLogger(save_dir='lightning_logs/', name=str(output_dir))
 
     # creating trainer
     trainer = pl.Trainer(gpus=args.gpus,

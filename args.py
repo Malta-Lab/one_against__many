@@ -35,7 +35,7 @@ def parse_codesearch_args(mode='train'):
                         default='datasets/CodeSearchNet')
     parser.add_argument('-lang', '--language', type=str, default='javascript')
     parser.add_argument('-ptm', '--pretrained_model',
-                        type=str, default='microsoft/codebert-base')
+                        type=str, default='microsoft/codebert-base', required=True)
     parser.add_argument('-bs', '--batch_size', type=int, default=32)
     parser.add_argument('--prefix', action='store_true')
     parser.add_argument('-ckpt', '--checkpoint_path', type=str, default=None)
