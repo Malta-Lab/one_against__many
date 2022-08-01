@@ -407,7 +407,7 @@ class MultiTaskDataset(Dataset):
         self.tokenizer = tokenizer
         self.datasets = {k:v.examples for k,v in datasets.items()}
         self.dataset_names = list(self.datasets.keys())
-        self.probabilities = self.__probabilities_codet5()
+        self.probabilities = self.__probabilities_codet5(self.datasets)
         self.examples = self.__compose_dataset()
 
 
@@ -438,6 +438,7 @@ class MultiTaskDataset(Dataset):
                     print(f'removing {dataset}')
                     probs_for_dataset.remove(probs_for_dataset[datasets_with_instances.index(dataset)])
                     datasets_with_instances.remove(dataset)
+                    probs_for_dataset = self.__probabilities_codet5({task: self.datasets[task] for task in datasets_with_instances})
 
             if self.same_probs:
                 choice = np.random.choice(datasets_with_instances)
@@ -452,9 +453,9 @@ class MultiTaskDataset(Dataset):
         
         return final_dataset
 
-    def __probabilities_codet5(self):
+    def __probabilities_codet5(self, datasets):
         """Same probs calculation done in CodeT5 source code"""
-        probs = [len(x) for x in self.datasets.values()]
+        probs = [len(x) for x in datasets.values()]
         probs = [x / sum(probs) for x in probs]
         probs = [x ** 0.7 for x in probs]
         probs = [x / sum(probs) for x in probs]

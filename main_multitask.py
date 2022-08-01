@@ -1,7 +1,6 @@
 from pathlib import Path
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 from utils import set_seed
 from datasets import MultiTaskDataset, Code2TestDataset, CloneDataset, CodeSearchNetDataset, ConcodeDataset, DefectDataset, RefineDataset, TranslateDataset
@@ -20,7 +19,7 @@ def build_dataset_dict(args, tokenizer, split='train'):
             for lang in args.cs_lang:
                 print('Adding CodeSearch for {}'.format(lang))
                 datasets['codesearch_' + lang] = CodeSearchNetDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, language=lang, lang_prefix=args.lang_prefix)
-        elif task == 'summarize':
+        elif task == 'summarization':
             for lang in args.sum_lang:
                 print('Adding Summarize for {}'.format(lang))
                 datasets['summarize_' + lang] = CodeSearchNetDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, language=lang, lang_prefix=args.lang_prefix)

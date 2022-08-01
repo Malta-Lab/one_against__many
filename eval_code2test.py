@@ -73,11 +73,11 @@ if __name__ == '__main__':
                    'code_bleu': tokenized_bleu(preds, ground_truths, tokenizer),
                    'alpha_bleu': alpha_bleu(preds, ground_truths)}, f)
 
-    with open(output_dir / 'predictions.txt', 'w') as f:
-        f.write('\n'.join(preds))
+    # with open(output_dir / 'predictions.txt', 'w') as f:
+    #     f.write('\n'.join(preds))
 
-    with open(output_dir / 'ground_truths.txt', 'w') as f:
-        f.write('\n'.join(ground_truths))
+    # with open(output_dir / 'ground_truths.txt', 'w') as f:
+    #     f.write('\n'.join(ground_truths))
     
     with open(output_dir / 'predictions_array.txt', 'w') as f:
         f.write(str(preds))
