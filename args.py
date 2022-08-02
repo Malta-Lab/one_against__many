@@ -13,7 +13,7 @@ def parse_multi_task_args(mode='train'):
     parser.add_argument('--prefix', action='store_true')
     parser.add_argument('--lang_prefix', action='store_true')
     parser.add_argument('--tasks', type=str, nargs='+', choices=[
-                        'codesearch', 'code2test', 'clone', 'concode', 'defect', 'refine', 'translate', 'summarization'], default=['codesearch', 'code2test'])
+                        'codesearch', 'code2test', 'clone', 'generation', 'defect', 'refine', 'translate', 'summarization'], default=['codesearch', 'code2test'])
     parser.add_argument('--cs_lang', type=str, nargs='+', default=['javascript'])
     parser.add_argument('--sum_lang', type=str, nargs='+', default=['javascript'])
     parser.add_argument('--translate_order', type=str, default='java-cs')

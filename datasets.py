@@ -246,6 +246,7 @@ class CodeSearchNetDataset(BaseDataset):
         super().__init__(data_path=data_path, split=split, tokenizer=tokenizer, prefix=prefix)
         self.language = language
         self.examples = read_jsonl(data_path / self.language / f'{split}.jsonl')
+        self.task = task
         if self.prefix:
             for i in self.examples:
                 i['code'] = f'{task} {self.language}: {i["code"]}' if not lang_prefix else f'{task}: {i["code"]}' 
@@ -262,7 +263,10 @@ class CodeSearchNetDataset(BaseDataset):
             code = squeeze_dict(code)
             comment = squeeze_dict(comment)
 
-        return code, comment, url
+        if self.task == 'codesearch':
+            return code, comment, url
+        elif self.task == 'summarization':
+            return comment, code
 
 
 class TranslateDataset(Dataset):
@@ -338,7 +342,7 @@ class ConcodeDataset(BaseDataset):
             f'{self.data_path}/{self.split}.json', data_num=None)
         if self.prefix:
             for i in self.examples:
-                i.source = f'concode: {i.source}'
+                i.source = f'generation: {i.source}'
 
     def __getitem__(self, idx):
         example = self.examples[idx]
@@ -417,8 +421,15 @@ class MultiTaskDataset(Dataset):
     def __getitem__(self, idx):
         example = self.examples[idx]
         task = example['task']
-        source = example['source'] if 'codesearch' not in task else example['code']
-        target = example['target'] if 'codesearch' not in task else example['docstring']
+        if 'codesearch' in task:
+            source = example['code']
+            target = example['docstring']
+        elif 'summarization' in task:
+            source = example['docstring']
+            target = example['code']
+        else:
+            source = example['source']
+            target = example['target']
         if self.tokenizer:
             source = tokenize(self.tokenizer, source)
             target = tokenize(self.tokenizer, target)

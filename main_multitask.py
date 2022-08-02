@@ -18,17 +18,19 @@ def build_dataset_dict(args, tokenizer, split='train'):
         elif task == 'codesearch':
             for lang in args.cs_lang:
                 print('Adding CodeSearch for {}'.format(lang))
-                datasets['codesearch_' + lang] = CodeSearchNetDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, language=lang, lang_prefix=args.lang_prefix)
+                datasets['codesearch ' + lang] = CodeSearchNetDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, 
+                                                                    language=lang, lang_prefix=args.lang_prefix)
         elif task == 'summarization':
             for lang in args.sum_lang:
-                print('Adding Summarize for {}'.format(lang))
-                datasets['summarize_' + lang] = CodeSearchNetDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, language=lang, lang_prefix=args.lang_prefix)
+                print('Adding Summarization for {}'.format(lang))
+                datasets['summarization ' + lang] = CodeSearchNetDataset(split=split, tokenizer=tokenizer, prefix=args.prefix, 
+                                                                    language=lang, lang_prefix=args.lang_prefix, task='summarization')
         elif task == 'clone':
             print('Adding Clone')
             datasets['clone'] = CloneDataset(split=split, tokenizer=tokenizer, prefix=args.prefix)
-        elif task == 'concode':
+        elif task == 'generation':
             print('Adding Concode')
-            datasets['concode'] = ConcodeDataset(split=split, tokenizer=tokenizer, prefix=args.prefix)
+            datasets['generation'] = ConcodeDataset(split=split, tokenizer=tokenizer, prefix=args.prefix)
         elif task == 'defect':
             print('Adding Defect')
             datasets['defect'] = DefectDataset(split=split, tokenizer=tokenizer, prefix=args.prefix)
