@@ -2,6 +2,7 @@
 pretrained_stuff
 datasets/*
 checkpoints
+logs
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
