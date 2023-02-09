@@ -8,7 +8,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py -ptm $PTM --batch_size 10 --gpus 2 --prefix \
---tasks codesearch code2test generation defect refine translate summarization -i 10000 \
+--tasks codesearch code2test generation defect refine translate summarization -i 100000 \
 --cs_lang javascript ruby go java python php --sum_lang javascript ruby go java python php \
 --output_dir $EXP_NAME
 
@@ -28,7 +28,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py -ptm $PTM --batch_size 10 --gpus 2 --prefix \
---tasks codesearch code2test clone defect refine translate summarization -i 10000 \
+--tasks codesearch code2test clone defect refine translate summarization -i 100000 \
 --cs_lang javascript ruby go java python php --sum_lang javascript ruby go java python php \
 --output_dir $EXP_NAME
 
@@ -48,7 +48,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py -ptm $PTM --batch_size 10 --gpus 2 --prefix \
---tasks codesearch code2test clone generation refine translate summarization -i 10000 \
+--tasks codesearch code2test clone generation refine translate summarization -i 100000 \
 --cs_lang javascript ruby go java python php --sum_lang javascript ruby go java python php \
 --output_dir $EXP_NAME
 
@@ -68,7 +68,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py -ptm $PTM --batch_size 10 --gpus 2 --prefix \
---tasks codesearch code2test clone generation defect translate summarization -i 10000 \
+--tasks codesearch code2test clone generation defect translate summarization -i 100000 \
 --cs_lang javascript ruby go java python php --sum_lang javascript ruby go java python php \
 --output_dir $EXP_NAME
 
@@ -88,7 +88,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py -ptm $PTM --batch_size 10 --gpus 2 --prefix \
---tasks codesearch code2test clone generation defect refine summarization -i 10000 \
+--tasks codesearch code2test clone generation defect refine summarization -i 100000 \
 --cs_lang javascript ruby go java python php --sum_lang javascript ruby go java python php \
 --output_dir $EXP_NAME
 
@@ -108,7 +108,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py -ptm $PTM --batch_size 10 --gpus 2 --prefix \
---tasks codesearch code2test clone generation defect refine translate -i 10000 \
+--tasks codesearch code2test clone generation defect refine translate -i 100000 \
 --cs_lang javascript ruby go java python php \
 --output_dir $EXP_NAME
 

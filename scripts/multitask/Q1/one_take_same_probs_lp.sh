@@ -1,5 +1,6 @@
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
-EXP_NAME="one_take_same_probs_lp"
+EXP_NAME="one_take_same_probs_lp_100k"
+ITERATIONS=100000
 # =========================================== CODET5 ================================================
 PTM="Salesforce/codet5-base"
 PTM_NAME="Salesforce-codet5-base"
@@ -7,7 +8,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py --same_probs -ptm $PTM --batch_size 12 --gpus 2 --prefix \
---tasks codesearch code2test clone generation defect refine translate summarization -i 10000 \
+--tasks codesearch code2test clone generation defect refine translate summarization -i $ITERATIONS \
 --cs_lang javascript ruby go java python php --sum_lang javascript ruby go java python php \
 --output_dir $EXP_NAME --lang_prefix
 
@@ -28,7 +29,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py --same_probs -ptm $PTM --batch_size 10 --gpus 2 --prefix \
---tasks codesearch code2test clone generation defect refine translate summarization -i 10000 \
+--tasks codesearch code2test clone generation defect refine translate summarization -i $ITERATIONS \
 --cs_lang javascript ruby go java python php --sum_lang javascript ruby go java python php \
 --output_dir $EXP_NAME --lang_prefix
 
@@ -48,7 +49,7 @@ CHECKPOINT_PATH="/home/parraga/projects/_masters/multitask_code/checkpoints/mult
 
 # Train
 CUDA_VISIBLE_DEVICES=0,2 python main_multitask.py --same_probs -ptm $PTM --batch_size 10 --gpus 2 --prefix \
---tasks codesearch code2test clone generation defect refine translate summarization -i 10000 \
+--tasks codesearch code2test clone generation defect refine translate summarization -i $ITERATIONS \
 --cs_lang javascript ruby go java python php --sum_lang javascript ruby go java python php \
 --output_dir $EXP_NAME --lang_prefix
 
