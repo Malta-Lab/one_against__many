@@ -1,7 +1,4 @@
 # multitask_code
-* [ ] Subir na nuvem os melhores modelos, que vão servir como baseline
-
-
 ## code_search
 
 ### Download dataset:
